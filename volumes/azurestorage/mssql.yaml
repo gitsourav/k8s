@@ -1,0 +1,23 @@
+---
+kind: StorageClass
+apiVersion: storage.k8s.io/v1
+metadata:
+  name: mssql-disk-storage
+provisioner: kubernetes.io/azure-disk
+parameters:
+  storageaccounttype: Standard_LRS
+  kind: Managed
+volumeBindingMode: WaitForFirstConsumer
+allowVolumeExpansion: true
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: mssql-data-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce 
+  storageClassName: mssql-disk-storage
+  resources:
+    requests:
+      storage: 10Gi

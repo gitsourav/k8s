@@ -1,0 +1,70 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: mssql
+spec:
+  selector:
+    app: mssql
+  ports:
+  - protocol: TCP
+    port: 1433
+    targetPort: 1433
+  type: LoadBalancer
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mssql
+  labels:
+    app: mssql
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mssql
+  template:
+    metadata:
+      labels:
+        app: mssql
+    spec:
+      nodeSelector:
+        kubernetes.io/os: windows
+      containers:
+      - name: mssql
+        image: mssql
+        # securityContext:
+        #   allowPrivilegeEscalation: false
+        #   readOnlyRootFilesystem: true
+        #   runAsNonRoot: true
+        #   runAsUser: 101
+        ports:
+        - containerPort: 1433
+        env:
+        - name: SA_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: sitecore-database
+              key: sitecore-databasepassword.txt
+        - name: ACCEPT_EULA
+          value: "Y"
+        - name: attach_dbs 
+          value: "[{'dbName':'Sitecore.Core','dbFiles':['/data/Sitecore.Core_Primary.mdf','/data/Sitecore.Core_Primary.ldf']}]"
+        volumeMounts:
+          - mountPath: /data
+            name: sql
+          # - mountPath: '/Program Files/Microsoft SQL Server/MSSQL14.MSSQLSERVER/MSSQL/DATA'
+          #   name: sql
+        # resources:
+        #   requests:
+        #     memory: 2Gi
+        #     cpu: 200m
+        #   limits:
+        #     memory: 3Gi
+        #     cpu: 700m  
+      imagePullSecrets:
+        - name: sitecore-docker-registry  
+      volumes:
+        - name: sql
+          persistentVolumeClaim:
+            claimName: shared-data-pvc
+      

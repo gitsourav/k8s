@@ -1,0 +1,22 @@
+---
+kind: StorageClass
+apiVersion: storage.k8s.io/v1
+metadata:
+  name: redis-disk-storage
+provisioner: kubernetes.io/azure-disk
+parameters:
+  skuName: Standard_LRS
+volumeBindingMode: WaitForFirstConsumer
+allowVolumeExpansion: true
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: redis-data-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce 
+  storageClassName: redis-disk-storage
+  resources:
+    requests:
+      storage: 1Gi
